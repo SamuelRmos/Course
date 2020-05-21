@@ -141,6 +141,7 @@ class LoginUseCaseSyncTest {
         assertThat(result, CoreMatchers.`is`(LoginUseCaseSync.UseCaseResult.NETWORK_ERROR))
     }
 
+// --------------- Helper Class ---------------//
 
     private class LoginHttpEndpointSyncTd : LoginHttpEndpointSync {
         var mIsGeneralError: Boolean = false

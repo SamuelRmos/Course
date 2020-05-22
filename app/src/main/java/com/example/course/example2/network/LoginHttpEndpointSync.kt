@@ -16,7 +16,7 @@ interface LoginHttpEndpointSync {
         private val mStatus: EndpointResultStatus,
         private val mAuthToken: String
     ) {
-        fun getStatus(): EndpointResultStatus = mStatus
-        fun getAuthToken(): String = mAuthToken
+        fun getStatus() = mStatus
+        fun getAuthToken() = mAuthToken
     }
 }

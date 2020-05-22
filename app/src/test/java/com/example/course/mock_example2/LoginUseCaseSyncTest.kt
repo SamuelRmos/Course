@@ -1,4 +1,4 @@
-package com.example.course.mock_example
+package com.example.course.mock_example2
 
 import com.example.course.example2.LoginUseCaseSync
 import com.example.course.example2.authtoken.AuthTokenCache
@@ -11,10 +11,13 @@ import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.*
 import org.mockito.Mockito.*
+import org.mockito.junit.MockitoJUnitRunner
 import java.lang.Exception
 
+@RunWith(MockitoJUnitRunner::class)
 class LoginUseCaseSyncTest {
     companion object {
         const val USERNAME = "username"
@@ -22,19 +25,25 @@ class LoginUseCaseSyncTest {
         const val AUTH_TOKEN = "authToken"
     }
 
+    @Mock
     lateinit var mLoginHttpEndpointSyncMock: LoginHttpEndpointSync
 
+    @Mock
     lateinit var mAuthTokenCacheMock: AuthTokenCache
+
+    @Mock
     lateinit var mEventBusPosterMock: EventBusPoster
-    private lateinit var SUT: LoginUseCaseSync
+
+    private lateinit var sut: LoginUseCaseSync
 
     @Before
     @Throws(Exception::class)
     fun setup() {
-        mLoginHttpEndpointSyncMock = mock(LoginHttpEndpointSync::class.java)
-        mAuthTokenCacheMock = mock(AuthTokenCache::class.java)
-        mEventBusPosterMock = mock(EventBusPoster::class.java)
-        SUT = LoginUseCaseSync(mLoginHttpEndpointSyncMock, mAuthTokenCacheMock, mEventBusPosterMock)
+        sut = LoginUseCaseSync(
+            mLoginHttpEndpointSyncMock,
+            mAuthTokenCacheMock,
+            mEventBusPosterMock
+        )
         success()
     }
 
@@ -42,7 +51,7 @@ class LoginUseCaseSyncTest {
     @Throws(Exception::class)
     fun loginSync_success_usernameAndPasswordPassedToEndpoint() {
         val argCaptor = argumentCaptor<String>()
-        SUT.loginSync(USERNAME, PASSWORD)
+        sut.loginSync(USERNAME, PASSWORD)
 
         verify(mLoginHttpEndpointSyncMock, times(1))
             .loginSync(argCaptor.capture(), argCaptor.capture())
@@ -56,7 +65,7 @@ class LoginUseCaseSyncTest {
     @Throws(Exception::class)
     fun loginSync_success_authTokenCached() {
         val argCaptor = argumentCaptor<String>()
-        SUT.loginSync(USERNAME, PASSWORD)
+        sut.loginSync(USERNAME, PASSWORD)
         verify(mAuthTokenCacheMock).cacheAuthToken(argCaptor.capture())
         assertThat(argCaptor.firstValue, CoreMatchers.`is`(AUTH_TOKEN))
     }
@@ -65,7 +74,7 @@ class LoginUseCaseSyncTest {
     @Throws(Exception::class)
     fun loginSync_generalError_authTokenNotCached() {
         generalError()
-        SUT.loginSync(USERNAME, PASSWORD)
+        sut.loginSync(USERNAME, PASSWORD)
         verifyNoMoreInteractions(mAuthTokenCacheMock)
     }
 
@@ -73,7 +82,7 @@ class LoginUseCaseSyncTest {
     @Throws(Exception::class)
     fun loginSync_serverError_authTokenNotCached() {
         serverError()
-        SUT.loginSync(USERNAME, PASSWORD)
+        sut.loginSync(USERNAME, PASSWORD)
         verifyNoMoreInteractions(mAuthTokenCacheMock)
     }
 
@@ -81,7 +90,7 @@ class LoginUseCaseSyncTest {
     @Throws(Exception::class)
     fun loginSync_success_loggedInEventPosted() {
         val argCaptor = argumentCaptor<LoggedInEvent>()
-        SUT.loginSync(USERNAME, PASSWORD)
+        sut.loginSync(USERNAME, PASSWORD)
         verify(mEventBusPosterMock).postEvent(argCaptor.capture())
         assertThat(argCaptor.lastValue, CoreMatchers.instanceOf(LoggedInEvent::class.java))
     }
@@ -90,7 +99,7 @@ class LoginUseCaseSyncTest {
     @Throws(Exception::class)
     fun loginSync_generalError_noInteractionWithEventBusPoster() {
         generalError()
-        SUT.loginSync(USERNAME, PASSWORD)
+        sut.loginSync(USERNAME, PASSWORD)
         verifyNoMoreInteractions(mEventBusPosterMock)
     }
 
@@ -98,14 +107,14 @@ class LoginUseCaseSyncTest {
     @Throws(Exception::class)
     fun loginSync_authError_noInteractionWithEventBusPoster() {
         authError()
-        SUT.loginSync(USERNAME, PASSWORD)
+        sut.loginSync(USERNAME, PASSWORD)
         verifyNoMoreInteractions(mEventBusPosterMock)
     }
 
     @Test
     @Throws(Exception::class)
     fun loginSync_success_successReturned() {
-        val result = SUT.loginSync(USERNAME, PASSWORD)
+        val result = sut.loginSync(USERNAME, PASSWORD)
         assertThat(result, CoreMatchers.`is`(LoginUseCaseSync.UseCaseResult.SUCCESS))
     }
 
@@ -113,7 +122,7 @@ class LoginUseCaseSyncTest {
     @Throws(Exception::class)
     fun loginSync_serverError_failureReturned() {
         serverError()
-        val result = SUT.loginSync(USERNAME, PASSWORD)
+        val result = sut.loginSync(USERNAME, PASSWORD)
         assertThat(result, CoreMatchers.`is`(LoginUseCaseSync.UseCaseResult.FAILURE))
     }
 
@@ -121,7 +130,7 @@ class LoginUseCaseSyncTest {
     @Throws(Exception::class)
     fun loginSync_authError_failureReturned() {
         authError()
-        val result = SUT.loginSync(USERNAME, PASSWORD)
+        val result = sut.loginSync(USERNAME, PASSWORD)
         assertThat(result, CoreMatchers.`is`(LoginUseCaseSync.UseCaseResult.FAILURE))
     }
 
@@ -129,7 +138,7 @@ class LoginUseCaseSyncTest {
     @Throws(Exception::class)
     fun loginSync_generalError_failureReturned() {
         generalError()
-        val result = SUT.loginSync(USERNAME, PASSWORD)
+        val result = sut.loginSync(USERNAME, PASSWORD)
         assertThat(result, CoreMatchers.`is`(LoginUseCaseSync.UseCaseResult.FAILURE))
     }
 
@@ -137,7 +146,7 @@ class LoginUseCaseSyncTest {
     @Throws(Exception::class)
     fun loginSync_networkError_networkErrorReturned() {
         networkError()
-        val result = SUT.loginSync(USERNAME, PASSWORD)
+        val result = sut.loginSync(USERNAME, PASSWORD)
         assertThat(result, CoreMatchers.`is`(LoginUseCaseSync.UseCaseResult.NETWORK_ERROR))
     }
 
@@ -189,6 +198,4 @@ class LoginUseCaseSyncTest {
         doThrow(NetworkErrorException())
             .`when`(mLoginHttpEndpointSyncMock).loginSync(anyString(), anyString())
     }
-
-
 }
